@@ -2,31 +2,48 @@
 
 
 {% block content %}
-<!-- Main Content Area -->
-<div class="container mt-4">
-    <h1 class="mb-4 section-title">
-      <span>Latest News</span>
-    </h1>
 
+
+  <!-- Main Content Area -->
+  <div class="container mt-4">
     <div class="row">
-      <!-- News Listing Column -->
+      <!-- Article Content Section -->
       <div class="col-lg-8">
-       {% include "newsportal/list/left/post_list.html" %}
-       {% include "newsportal/list/left/pagination.html" %}
+  
+
+       {% include "newsportal/detail/left/related_articals.html" %}
+       {% include "newsportal/detail/left/post_detail.html" %}
+
+        <!-- Comments Section -->
+        <section class="comments-section mt-5">
+            {% include "newsportal/detail/left/comment_form.html" %}
+            {% include "newsportal/detail/left/comment_list.html" %}
+
+
+          
+        </section>
+
       </div>
 
       <!-- Sidebar (Reused Structure) -->
       <div class="col-lg-4">
         <div class="position-sticky sticky-sidebar-offset">
+      
             {% include "newsportal/home/right/advertisement.html" %}
             {% include "newsportal/home/right/newsletter.html" %}
             {% include "newsportal/home/right/most_popular.html" %}
-      
-        
         </div>
       </div>
     </div>
   </div>
 
+
+
+
 {% endblock content %}
+
+
+
+
+
 

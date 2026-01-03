@@ -1,11 +1,30 @@
 from django.shortcuts import render
-from django.views.generic import TemplateView,ListView
+from django.views.generic import TemplateView,ListView, DetailView
 from django.utils import timezone
 from datetime import timedelta
-from .models import Post
+from .models import Post, Advertisement
+
+
+
+class SidebarMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+
+        context["popular_posts"] = Post.objects.filter(
+            published_at__isnull=False, status="active"
+        ).order_by("-published_at")[:5]
+
+
+        context["advertisement"] = (
+            Advertisement.objects.all().order_by("-created_at").first()
+        )
+
+        return context
+
 
 # Create your views here.
-class HomeView(TemplateView):
+class HomeView( SidebarMixin, TemplateView):
     template_name = "newsportal/home.html"
 
 #if you want to pass extra data
@@ -31,10 +50,7 @@ class HomeView(TemplateView):
 
 
 
-        context["popular_posts"] = Post.objects.filter(
-            published_at__isnull=False, status="active"
-        ).order_by("-published_at")[:5]
-
+        
 
 
         one_week_ago = timezone.now() - timedelta(days=7)
@@ -43,20 +59,40 @@ class HomeView(TemplateView):
 
         ).order_by("-published_at", "-views_count")[:5]
 
+
+
         return context
 
 
 
 
-class PoatListView(ListView):
+class PostListView( SidebarMixin, ListView):
     model=Post
-    template_name= "newsportal/list?list.html"
+    template_name= "newsportal/list/list.html"
     context_object_name ="posts"
+    paginate_by = 1
 
     def get_queryset(self):
         return Post.objects.filter(
-            published_at__isnull=False, atatus='active'
-
+            published_at__isnull=False, status='active'
         ).order_by("-published_at")
+
+
+
+
+
          
+    
+
+class PostDetailView( SidebarMixin, DetailView):
+    model = Post
+    template_name = "newsportal/detail/detail.html"
+    context_object_name = "post"
+
+
+    def get_queryset(self): 
+        query = super().get_queryset()
+        query = query.filter(published_at__isnull=False, status="active")
+        return query
+
     
