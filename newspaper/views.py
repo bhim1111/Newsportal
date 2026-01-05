@@ -96,3 +96,41 @@ class PostDetailView( SidebarMixin, DetailView):
         return query
 
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        current_post = self.object
+        current_post.views_count += 1
+        current_post.save()
+
+        context["related_articels"] = (
+            Post.objects.filter(
+                published_at__isnull=False,
+                status="active",
+                category=self.object.category,                
+            )
+            .exclude(id=self.object.id)
+            .order_by("-published_at", "-views_count")[:2]
+        )
+        return context
+
+
+
+
+
+class PostByCategoryView(SidebarMixin, ListView):
+    model = Post
+    template_name = "newsportal/list/list.html"
+    context_object_name = "posts"
+    paginate_by = 1
+
+
+    def get_queryset(self):
+        query =super().get_queryset()
+        query = query.filter(
+            published_at__isnull=False,
+            status="active",
+            category__id=self.kwargs["category_id"],
+        
+        ).order_by("-published_at")
+        return query
