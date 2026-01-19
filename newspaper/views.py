@@ -1,15 +1,16 @@
 from django.contrib import messages
 from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
+from django.views import View
 from django.views.generic import TemplateView,ListView, DetailView, CreateView
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.messages.views import SuccessMessageMixin
+from django.views.generic.edit import FormMixin
+from newspaper.forms import CommentForm, ContactForm, NewsletterForm
+from .models import Contact, OurTeam, Post, Advertisement, Category, Tag,Comment
 
-from newspaper.forms import ContactForm
-from .models import Contact, OurTeam, Post, Advertisement, Category, Tag
-
-
+from django.http import JsonResponse
 
 class SidebarMixin:
     def get_context_data(self, **kwargs):
@@ -89,10 +90,11 @@ class PostListView( SidebarMixin, ListView):
          
     
 
-class PostDetailView( SidebarMixin, DetailView):
+class PostDetailView( SidebarMixin,FormMixin, DetailView):
     model = Post
     template_name = "newsportal/detail/detail.html"
     context_object_name = "post"
+    form_class = CommentForm
 
 
     def get_queryset(self): 
@@ -117,7 +119,29 @@ class PostDetailView( SidebarMixin, DetailView):
             .exclude(id=self.object.id)
             .order_by("-published_at", "-views_count")[:2]
         )
+        context["comments"] = Comment.objects.filter(post=self.object).order_by("-created_at")
         return context
+    
+    def get_success_url(self):
+        return reverse("post-detail", kwargs={"pk": self.object.pk})
+    
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+        
+    
+    def form_valid(self,form):
+        comment = form.save(commit=False)
+        comment.post = self.object
+        comment.user = self.request.user
+        comment.save()
+        return super().form_valid(form)
+            
+        
 
 
 
@@ -180,5 +204,40 @@ class AboutUsView(TemplateView):
         context["our_teams"] = OurTeam.objects.all()
         return context
 
-    
-    
+
+
+
+
+class NewsletterView(View):
+
+    def post(self, request):
+        is_ajax = request.headers.get("X-Requested-With")
+
+        if is_ajax == "XMLHttpRequest":
+            form = NewsletterForm(request.POST)
+
+            if form.is_valid():
+                form.save()
+                return JsonResponse(
+                    {
+                        "success": True,
+                        "message": "Successfully subscribed to the newsletter.",
+                    },
+                    status=201,
+                )
+            else:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "Cannot subscribe to the newsletter.",
+                    },
+                    status=400,
+                )
+
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Cannot process. Must be an AJAX XMLHttpRequest.",
+            },
+            status=400,
+        )

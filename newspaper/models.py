@@ -99,7 +99,7 @@ class Contact(TimeStampModel):
 class OurTeam(TimeStampModel):
     name = models.CharField(max_length=250)
     position = models.CharField(max_length=100)
-    image = models.ImageField(upload_to="team_image/%y/%m/%d, blank=False")
+    image = models.ImageField(upload_to="team_image/%y/%m/%d", blank=False)
     description = models.TextField()
     
     
@@ -118,3 +118,31 @@ class UserProfile(TimeStampModel):
     def __str__(self):
         return self.user.username
     
+    
+    
+
+       
+class Comment(TimeStampModel): 
+   post =models.ForeignKey(Post,  on_delete=models.CASCADE)
+   user =models.ForeignKey("auth.User", on_delete=models.CASCADE)
+   content =models.TextField()
+     
+   
+   
+   
+class Newsletter(TimeStampModel):
+     email = models.EmailField(unique=True)
+     
+     
+     def __str__(self):
+               return self.email
+         
+         
+         
+   
+         
+            
+    
+       
+        
+        

@@ -16,5 +16,7 @@ urlpatterns = [
     path('tags/', views.AllTagsListView.as_view(), name="tags"),
     path('contact/', views.ContactCreate.as_view(), name="contact"),
     path('about-us/', views.AboutUsView.as_view(), name="about-us"),
+    path('newsletter/', views.NewsletterView.as_view(), name="newsletter"),
+
 
 ]
